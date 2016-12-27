@@ -1,5 +1,6 @@
 package ELECTION;
 
+<<<<<<< HEAD
 import java.io.*;
 import java.util.*;
 import java.net.*;
@@ -46,3 +47,29 @@ public class Console{
 		}
 	}
 }
+=======
+import java.net.ServerSocket;
+
+public class Console {
+
+	
+	
+	
+	/*try{
+		 ServerSocket server=new ServerSocket(4242);
+	   }
+	
+	catch(Exception e){
+		   System.out.println(e);
+		 e.printStackTrace();
+		 }
+		 */
+	}
+	
+	
+
+	
+
+
+
+>>>>>>> 580517a4abeb04e1da9401d699032ccf64bafd40
