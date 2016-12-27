@@ -1,121 +1,132 @@
 package ELECTION;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.DatagramSocket;
-import java.net.ServerSocket;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
-import java.util.ArrayList;
-
-
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Random;
 
 public class BureauDeVote {
-	
-	ArrayList<Electeur> electeur = new ArrayList<Electeur>();
-	ArrayList<Candidat> candidat = new ArrayList<Candidat>();
-	
-	
-	
-	
-	public static void main(String[] args) throws IOException  {
-	
-		ServeurDeVote serveur = new ServeurDeVote();
-		Socket socket = null;
-		PrintWriter pw = null;
-		BufferedReader br = null;
-		
-		if (args.length==2){
-			
-			int port =0;
-			String adress;
-			
-			try {
-				port = Integer.parseInt(args[1]) ;
-			}catch (NumberFormatException e) {
-				e.printStackTrace();
-			} 
-				
-			adress=args[0];
-			
-			try {
-				socket =new Socket(adress,port);
-				
-				br=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				pw=new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-				
-				String message="Salut je suis un nouveau bureau de vote!Je vais te passer mes " +
-						"coordonnées et toi \n passe moi les coordonnées du bureau avec qui tu communique." +
-						"Comme ça je pourrai m'insèrer \n dans le anneau de communication. \n Merci \n";
-				pw.print(message);
-				pw.flush();
-				
-				message="COOR "+serveur.getAdress()+" "+serveur.getUdpPort()+"\n";
-				pw.print(message);
-				pw.flush();
-				
-				
-				message=br.readLine();
-				System.out.println("merci, je viens de recevoir les coordonnées");
-				
-				String coordonnées[]  = message.split(" ");
-				String nextAdress =coordonnées[0];
-				int nextUdpPort = Integer.parseInt(coordonnées[1]);
-				
-				serveur.setServeurDeVote1(nextUdpPort, nextAdress);
-				
-			}catch(Exception e){
-				System.out.println(e);
-				e.printStackTrace();
-			}finally{
-				socket.close();
-				br.close();
-				pw.close();
-			}
-		
-		}
-	
-		try{
-			 ServerSocket ssv=new ServerSocket(serveur.getTcpPort());
-			 DatagramSocket ds=new DatagramSocket(serveur.getUdpPort());
-			 serveur.setServeurDeVote2(ds);
-			 
-			 
-			 while(true){
-				 Socket newSocket=ssv.accept();
-				 
-				 Thread tcp=new ComTcpThread(newSocket);
-				 Thread udp=new ComUdpThread(serveur);
-				 
-				 Thread entreeTcp=new EntreeTcpThread(newSocket);
-				 Thread entreeUdp=new EntreeUdpThread(serveur);
-				 
-				 tcp.start();
-				 udp.start();
-				 entreeTcp.start();
-				 entreeUdp.start();
-				 
-				 tcp.join();
-				 udp.join();
-				 entreeTcp.join();
-				 entreeUdp.join();
-				
-			
-				
-				
-				
-			}
-			
-		}catch(Exception e){
-			   System.out.println(e);
-			 e.printStackTrace();
-			 }
+    private int id;
+    private int tcpPort;
+    private int udpPort;
+    private int nextUdpPort;
+    private String myAdress;
+    private String nextAdress;
 
-	}
+    public BureauDeVote() {
+        this.myAdress = this.myAdress();
+        System.out.println(myAdress);
+        this.tcpPort = this.tcpPort(this.myAdress);
+        this.udpPort = this.udpPort();
+        this.id = this.myId();
+        this.nextUdpPort = this.udpPort;
+        this.nextAdress = this.myAdress;
+    }
 
-	
-	
+    public BureauDeVote(int portUDP, String nextAdresse) {
+    	
+        this.myAdress = this.myAdress();
+        this.tcpPort = this.tcpPort(this.myAdress);
+        this.udpPort = this.udpPort();
+        this.id = this.myId();
+        this.nextUdpPort = portUDP;
+        this.nextAdress = nextAdresse;
+    }
 
+    public int getId() {
+        return this.id;
+    }
+
+    public int getTcpPort() {
+        return this.tcpPort;
+    }
+
+    public int getUdpPort() {
+        return this.udpPort;
+    }
+
+    public int getNextUdpPort() {
+        return this.nextUdpPort;
+    }
+
+    public void setNextUdpPort(int n) {
+        this.nextUdpPort = n;
+    }
+
+    public String getAdress() {
+        return this.myAdress;
+    }
+
+    public String getNextAdress() {
+        return this.nextAdress;
+    }
+
+    public void setNextAdress(String string) {
+        this.nextAdress = string;
+    }
+
+    private int tcpPort(String adresse) {
+    	Socket socket = null;
+        for (int i = 1024; i < 10000; i++) {
+            try {
+            	socket = new Socket(adresse,i);
+                socket.close();
+                return i;
+            }
+            catch (Exception e) {
+            	e.printStackTrace();
+                continue;
+            }
+        }
+        return -1;
+    }
+
+    private int udpPort() {
+        for (int i = 1024; i < 10000; ++i) {
+            try {
+                DatagramSocket datagramSocket = new DatagramSocket(i);
+                datagramSocket.close();
+                return i;
+            }
+            catch (Exception e) {
+                continue;
+            }
+        }
+        return -1;
+    }
+
+    private String myAdress() {
+        String string = null;
+        try {
+            Enumeration<NetworkInterface> enumeration = NetworkInterface.getNetworkInterfaces();
+            while (enumeration.hasMoreElements()) {
+                NetworkInterface networkInterface = enumeration.nextElement();
+                Enumeration<InetAddress> enumeration2 = networkInterface.getInetAddresses();
+                while (enumeration2.hasMoreElements()) {
+                    InetAddress inetAddress = enumeration2.nextElement();
+                    if (!(inetAddress instanceof Inet4Address) || inetAddress.isLoopbackAddress()) continue;
+                    string = inetAddress.toString();
+                    String[] arrstring = string.split("\\/");
+                    return arrstring[1];
+                }
+            }
+        }
+        catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int myId() {
+        Random random = new Random();
+        return random.nextInt(10001);
+    }
+
+    public String toString() {
+        return "Mon identifiant (\u00e9lection) : " + this.id + "\nMon port TCP : " + this.tcpPort + "\nMon port UDP : " + this.udpPort + "\nLe port du serveur avec quije communique :" + this.nextUdpPort + "\n Mon adresse :" + this.myAdress + "\nL'adresse du bureau de voteavec qui je communique :" + this.nextAdress;
+    }
 }

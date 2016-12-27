@@ -1,11 +1,9 @@
 package ELECTION;
 
-import java.net.*;
-import java.io.*;
-import java.util.*;
-
-public class ClientConsoleThread extends Thread{
-	public void run(){
-		
-	}
+public class ClientConsoleThread extends Thread {
+	
+    @Override
+    public void run() {
+    }
+    
 }

@@ -1,172 +1,67 @@
 package ELECTION;
 
+import ELECTION.BureauDeVote;
+import ELECTION.EntreeTcpThread;
+import ELECTION.Message;
 import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Hashtable;
 
 public class ServeurDeVote {
-	
-	
+    private BureauDeVote bureau;
+    int port;
+    String adresse;
 
-	private String id;
-	private int tcpPort;
-	private int udpPort;
-	private int nextUdpPort;
-	private String myAdress;
-	private String nextAdress;
-	private DatagramSocket ds;
-	
-	public ServeurDeVote(){
-		
-		this.myAdress=myAdress();
-		this.tcpPort=tcpPort(this.myAdress);
-		this.udpPort=udpPort();
-		this.id=myId(tcpPort,myAdress);
-		this.nextUdpPort=udpPort;
-		this.nextAdress=myAdress;
-	}
-	
-	public String getId(){
-		return this.id;
-	}
-	
-	public int getTcpPort(){
-		return this.tcpPort;
-	}
-	
-	public int getUdpPort(){
-		return this.udpPort;
-	}
-	
-	public int getNextPort(){
-		return this.nextUdpPort;
-	}
+    public ServeurDeVote() {
+        this.bureau = new BureauDeVote();
+    }
 
-	public String getAdress(){
-		return this.myAdress;
-	}
-	
-	public String getNextAdress(){
-		return this.nextAdress;
-	}
-	
-	public DatagramSocket getPaquet() {
-		return ds;
-	}
-	
-	public void setServeurDeVote1(int nextUdpPort,String nextAdress){
-		this.nextUdpPort=nextUdpPort;
-		this.nextAdress=nextAdress;
-	}
-	
-	public void setServeurDeVote2(DatagramSocket ds){
-		this.ds=ds;
-	}
-	
-	private int tcpPort(String c){
+    public ServeurDeVote(int n, String string) {
+        this.port = n;
+        this.adresse = string;
+        this.bureau = new BureauDeVote();
+    }
 
-		for(int i=1024;i<10000;i++){
-			try{
-				Socket socket=new Socket(c,i);
-				socket.close();
-			}catch(Exception e){
-				return i;
-			}
-		}
-		return -1;
-		}
+    public void lancer() {
+        EntreeTcpThread entreeTcpThread = new EntreeTcpThread(this.bureau);
+        entreeTcpThread.start();
+    }
 
-	private int udpPort(){
-
-		for(int i=1024;i<10000;i++){ 
-			try{
-				DatagramSocket dso=new DatagramSocket(i);
-				dso.close();
-				return i;
-			  
-			}catch(Exception e){
-				return -1;
-			}
-		 }
-		return -1;
-	}
-	
-	private String myAdress() {
-		
-		String s = null;
-		Enumeration<NetworkInterface> listNi;
-		try {
-			listNi = NetworkInterface.getNetworkInterfaces();
-		
-	 	while(listNi.hasMoreElements()){
-			NetworkInterface nic=listNi.nextElement();
-			Enumeration<InetAddress> listIa=nic.getInetAddresses();
-			while(listIa.hasMoreElements()){
-	 			InetAddress iac=listIa.nextElement();
-				if(iac instanceof Inet4Address && !iac.isLoopbackAddress())
-					{ s=iac.toString();
-					String tab[]=s.split("\\/");
-					return tab[1];
-					}
-				}
-	 		}
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			}
-				
-		return null;
-
-	}
-	
-	
-	private String remplirZero(int n,String s){
-		
-		String str="";
-		for(int i=0;i<n-s.length();i++)
-			str+="0";
-		
-		return str+s;
-	}
-
-	
-	public String myId(int tcpPort,String adress){
-
-		String tab[]=adress.split("\\.");
-		String s=remplirZero(3,tab[3]);
-
-		return Character.toString(tab[2].charAt(tab[2].length()-1))+s+Integer.toString(tcpPort);
-		}
-
-	public String toString(){
-		return "Mon identifiant : "+id+"\nMon port TCP : "+tcpPort+"\nMon port UDP : "+udpPort+"\nLe port du serveur avec qui"+
-				"je communique :"+nextUdpPort+"\n Mon adresse :"+myAdress+"\nL'adresse du"+
-				"avec qui je communique :"+nextAdress;
-	}
-
-	
-	
-
-
-
-
-
-
+    public void inserer() {
+        try {
+            System.out.println("=======================Debut insertion==========================");
+            Socket socket = new Socket(this.adresse, this.port);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+            String string = bufferedReader.readLine();
+            System.out.println("Message recu de l'entit\u00e9 :" + string);
+            Message message = new Message(string);
+            Hashtable<String, String> hashtable = message.insertMess();
+            String string2 = "NEWC " + this.bureau.getAdress() + " " + this.bureau.getUdpPort() + "\n";
+            System.out.println("Resultat de Hashtable " + hashtable);
+            System.out.print(string2);
+            printWriter.print(string2);
+            printWriter.flush();
+            string = bufferedReader.readLine();
+            printWriter.close();
+            bufferedReader.close();
+            socket.close();
+            this.bureau.setNextAdress(hashtable.get("ip"));
+            this.bureau.setNextUdpPort(Integer.parseInt(hashtable.get("port")));
+            System.out.println("Serveur de join apr\u00e8s vote apr\u00e8s join");
+            System.out.println(this.bureau);
+        }
+        catch (Exception var1_2) {
+            System.out.println(var1_2.getMessage());
+            var1_2.printStackTrace();
+        }
+    }
 }
-
-
-
-
-
