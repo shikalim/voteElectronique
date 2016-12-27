@@ -75,24 +75,32 @@ public class BureauDeVote {
 				pw.close();
 			}
 		
-		
+		}
 	
 		try{
 			 ServerSocket ssv=new ServerSocket(serveur.getTcpPort());
 			 DatagramSocket ds=new DatagramSocket(serveur.getUdpPort());
-			 serveur.setServeurDeVote2(ssv, ds);
+			 serveur.setServeurDeVote2(ds);
 			 
 			 
 			 while(true){
+				 Socket newSocket=ssv.accept();
 				 
-				 Thread tcp=new ServeurThread(serveur);
-				 Thread udp=new ComUDP(serveur);
+				 Thread tcp=new ComTcpThread(newSocket);
+				 Thread udp=new ComUdpThread(serveur);
 				 
+				 Thread entreeTcp=new EntreeTcpThread(newSocket);
+				 Thread entreeUdp=new EntreeUdpThread(serveur);
 				 
 				 tcp.start();
 				 udp.start();
+				 entreeTcp.start();
+				 entreeUdp.start();
+				 
 				 tcp.join();
 				 udp.join();
+				 entreeTcp.join();
+				 entreeUdp.join();
 				
 			
 				
@@ -107,7 +115,7 @@ public class BureauDeVote {
 
 	}
 
-	}
 	
 	
+
 }

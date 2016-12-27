@@ -26,7 +26,6 @@ public class ServeurDeVote {
 	private int nextUdpPort;
 	private String myAdress;
 	private String nextAdress;
-	private ServerSocket ssv;
 	private DatagramSocket ds;
 	
 	public ServeurDeVote(){
@@ -63,29 +62,17 @@ public class ServeurDeVote {
 		return this.nextAdress;
 	}
 	
-	public ServerSocket getServerSocket() {
-		return ssv;
-	}
-	
-	
-	
-	
 	public DatagramSocket getPaquet() {
 		return ds;
 	}
 	
 	public void setServeurDeVote1(int nextUdpPort,String nextAdress){
-		
 		this.nextUdpPort=nextUdpPort;
 		this.nextAdress=nextAdress;
-	
 	}
 	
-	public void setServeurDeVote2(ServerSocket ssv, DatagramSocket ds){
-		
-		this.ssv=ssv;
+	public void setServeurDeVote2(DatagramSocket ds){
 		this.ds=ds;
-	
 	}
 	
 	private int tcpPort(String c){
