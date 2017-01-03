@@ -24,15 +24,21 @@ public class ServeurDeVote {
         this.bureau = new BureauDeVote();
     }
 
-    public ServeurDeVote(int n, String string) {
-        this.port = n;
-        this.adresse = string;
+    public ServeurDeVote(int port, String adresse) {
+        this.port = port;
+        this.adresse = adresse;
         this.bureau = new BureauDeVote();
     }
 
     public void lancer() {
-        EntreeTcpThread entreeTcpThread = new EntreeTcpThread(this.bureau);
+        System.out.println(bureau);
+        EntreeTcpThread entreeTcpThread = new EntreeTcpThread(bureau);
         entreeTcpThread.start();
+        EntreeUdpThread entreeUdpThread = new EntreeUdpThread(bureau);
+        entreeUdpThread.start();
+        EntreeStandardThread entreeStandardThread = new EntreeStandardThread(bureau);
+        entreeStandardThread.start();
+
     }
 
     public void inserer() {
@@ -41,27 +47,27 @@ public class ServeurDeVote {
             Socket socket = new Socket(this.adresse, this.port);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-            String string = bufferedReader.readLine();
-            System.out.println("Message recu de l'entit\u00e9 :" + string);
-            Message message = new Message(string);
+            String mess = bufferedReader.readLine();
+            System.out.println("Message recu de l'entit\u00e9 :" + mess);
+            Message message = new Message(mess);
             Hashtable<String, String> hashtable = message.insertMess();
-            String string2 = "NEWC " + this.bureau.getAdress() + " " + this.bureau.getUdpPort() + "\n";
+            String reponse= "NEWC " + this.bureau.getAdress() + " " + this.bureau.getUdpPort() + "\n";
             System.out.println("Resultat de Hashtable " + hashtable);
-            System.out.print(string2);
-            printWriter.print(string2);
+            System.out.print(reponse);
+            printWriter.print(reponse);
             printWriter.flush();
-            string = bufferedReader.readLine();
+            mess = bufferedReader.readLine();
             printWriter.close();
             bufferedReader.close();
             socket.close();
             this.bureau.setNextAdress(hashtable.get("ip"));
             this.bureau.setNextUdpPort(Integer.parseInt(hashtable.get("port")));
             System.out.println("Serveur de join apr\u00e8s vote apr\u00e8s join");
-            System.out.println(this.bureau);
+            lancer();
         }
-        catch (Exception var1_2) {
-            System.out.println(var1_2.getMessage());
-            var1_2.printStackTrace();
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }

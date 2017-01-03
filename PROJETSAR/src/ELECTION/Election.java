@@ -12,6 +12,7 @@ public class Election {
             if (args.length == 4 && args[1].equals("-join")) {
                 serveurDeVote = new ServeurDeVote(Integer.parseInt(args[2]), args[3]);
                 serveurDeVote.inserer();
+                
             }
         }
     }
