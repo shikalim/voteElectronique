@@ -14,10 +14,6 @@ public class EntreeUdpThread extends Thread {
   public EntreeUdpThread (BureauDeVote bureau){
 
     this.bureau = bureau ;
-
-  }
-
-  public void run(){
     try{
       dso=new DatagramSocket(bureau.getUdpPort());
       data=new byte[1024];
@@ -27,7 +23,13 @@ public class EntreeUdpThread extends Thread {
     {
       e.printStackTrace();
     }
-    while(true)
+
+  }
+
+ 
+  public void run(){
+
+   while(true)
     {
       try
       {
@@ -40,7 +42,7 @@ public class EntreeUdpThread extends Thread {
         System.out.println("Message  reçu: "+st);
         System.out.println("De la machine:  "+paquet.getAddress().toString());
         Message message = new Message(st);
-        Hashtable <String,String>result = message.messUDP();
+        Hashtable <String,String> result = message.messUDP();
 
         if(result.get("type").equals("ElectionChef"))
         {
@@ -52,7 +54,20 @@ public class EntreeUdpThread extends Thread {
         {
           synchronized(bureau)
           {
-            ChangRoberts.receptionElu(bureau,st,result.get("ip"),Integer.parseInt(result.get("port")));
+          	ChangRoberts.receptionElu(bureau,st,result.get("ip"),Integer.parseInt(result.get("port")));
+          }
+
+
+        }
+
+
+        if(result.get("type").equals("Suiveur"))
+        {
+          synchronized(bureau)
+          {
+            if(!bureau.addSuiveur(result.get("ip"),Integer.parseInt(result.get("port"))))
+              System.out.println("Ce serveur n'est pas le chef ") ;
+
           }
         }
 

@@ -47,10 +47,20 @@ public class Message {
         this.dic.put("type", arrstring[0].trim());
         this.dic.put("ip", arrstring[1].trim());
         this.dic.put("port", arrstring[2].trim());
-        
 
       }
 
+
+
+      
+
+      if(dic.get("type").equals("Suiveur")){
+        this.dic.put("type", arrstring[0].trim());
+        this.dic.put("ip", arrstring[1].trim());
+        this.dic.put("port", arrstring[2].trim());
+
+      }
+      
       return this.dic;
     }
 }

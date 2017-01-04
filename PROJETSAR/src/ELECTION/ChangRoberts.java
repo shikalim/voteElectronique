@@ -49,12 +49,18 @@ public class ChangRoberts{
 
   public static void receptionElu(BureauDeVote bureau,String message,String adresse,int port)
   {
-    if(bureau.EstChef()) return ;
+
+    if(bureau.estChef()) return ;
     Communication.envoyer(message,bureau.getNextAdress(),bureau.getNextUdpPort());
     bureau.setNextAdress(adresse);
     bureau.setNextUdpPort(port);
     System.out.println("Après élection");
     System.out.println(bureau);
+
+    message="Suiveur "+bureau.getAdress()+" "+bureau.getUdpPort()+"\n";
+    System.out.println("J'ai envoyé le message suivant au chef: "+message);
+    Communication.envoyer(message,bureau.getNextAdress(),bureau.getNextUdpPort());
+
   }
 
 }

@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Random;
 import java.net.ServerSocket;
+import java.util.LinkedList ;
 
 public class BureauDeVote {
     private String id;
@@ -22,6 +23,9 @@ public class BureauDeVote {
     private boolean vote ; /*Vaut true si le bureau déjà participer à l'election du chef */
     private boolean chef ; /*Vaut true s'il est élu comme chef */
 
+     /*Contient les adresses et ports  des serveurs qui sont connectés au serveur au cous où il est nommé chef */
+    private LinkedList <LinkedList<String>> suiveurs=null;
+
     public BureauDeVote() {
         this.myAdress = this.myAdress();
         System.out.println(myAdress);
@@ -32,6 +36,8 @@ public class BureauDeVote {
         this.nextUdpPort = this.udpPort;
         this.nextAdress = this.myAdress;
         vote = false ;
+        suiveurs =  new LinkedList <LinkedList<String>> ();
+
     }
 
     public BureauDeVote(int portUDP, String nextAdresse) {
@@ -44,6 +50,7 @@ public class BureauDeVote {
         this.nextUdpPort = portUDP;
         this.nextAdress = nextAdresse;
         vote = false ;
+        suiveurs =  new LinkedList <LinkedList<String>> ();
     }
 
     public String getId() {
@@ -93,7 +100,7 @@ public class BureauDeVote {
         return this.nextAdress;
     }
 
-    public boolean EstChef(){
+    public boolean estChef(){
       return chef ;
     }
 
@@ -119,6 +126,7 @@ public class BureauDeVote {
         return -1;
     }
 
+    /*Retourne un port UDP disponible */
     private int udpPort() {
         for (int i = 1024; i < 10000; ++i) {
             try {
@@ -133,7 +141,7 @@ public class BureauDeVote {
         return -1;
     }
 
-
+    /*Retourne l'adressse de la machine */
     private String myAdress() {
         String string = null;
         try {
@@ -154,6 +162,20 @@ public class BureauDeVote {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /* Ajoute l'adresse et le port d'un serveur */
+    /*retour true si l'ajout s'est bien passé */
+    public boolean addSuiveur(String adresse,int port)
+    {
+      if(!chef) return false ;
+      String p = ""+port ;
+      LinkedList <String> l = new LinkedList<String>();
+      l.add(p);
+      l.add(adresse);
+      suiveurs.add(l);
+      System.out.println("Les serveurs qui sont connectés "+suiveurs);
+      return true ;
     }
 
     public int myNumero() {
